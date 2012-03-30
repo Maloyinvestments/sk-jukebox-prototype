@@ -21,9 +21,9 @@ namespace SkJukeBox_Demo
     public partial class MainWindow : Window
     {
         private int index = 0;
-        private int count = 3;
+        private int count = 10;
         private ObservableCollection<string> tempStrings;
-        ObservableCollection<string> strings = new ObservableCollection<string>() { "aaa", "vvv", "ccc", "aaa1", "vvv1", "ccc1", "aaa2", "vvv2", "ccc2", "aaa3", "vvv3", "ccc3", };
+        ObservableCollection<string> strings = new ObservableCollection<string>() { "aaa", "vvv", "ccc", "aaa1", "vvv1", "ccc1", "aaa2", "vvv2", "ccc2", "aaa3", "vvv3", "ccc3", "aaa", "vvv", "ccc", "aaa1", "vvv1", "ccc1", "aaa2", "vvv2", "ccc2", "aaa3", "vvv3", "ccc3", "aaa", "vvv", "ccc", "aaa1", "vvv1", "ccc1", "aaa2", "vvv2", "ccc2", "aaa3", "vvv3", "ccc3", "aaa", "vvv", "ccc", "aaa1", "vvv1", "ccc1", "aaa2", "vvv2", "ccc2", "aaa3", "vvv3", "ccc3", "aaa", "vvv", "ccc", "aaa1", "vvv1", "ccc1", "aaa2", "vvv2", "ccc2", "aaa3", "vvv3", "ccc3", "aaa", "vvv", "ccc", "aaa1", "vvv1", "ccc1", "aaa2", "vvv2", "ccc2", "aaa3", "vvv3", "ccc3", "aaa", "vvv", "ccc", "aaa1", "vvv1", "ccc1", "aaa2", "vvv2", "ccc2", "aaa3", "vvv3", "ccc3", "aaa", "vvv", "ccc", "aaa1", "vvv1", "ccc1", "aaa2", "vvv2", "ccc2", "aaa3", "vvv3", "ccc3", "aaa", "vvv", "ccc", "aaa1", "vvv1", "ccc1", "aaa2", "vvv2", "ccc2", "aaa3", "vvv3", "ccc3", "aaa", "vvv", "ccc", "aaa1", "vvv1", "ccc1", "aaa2", "vvv2", "ccc2", "aaa3", "vvv3", "ccc3", "aaa", "vvv", "ccc", "aaa1", "vvv1", "ccc1", "aaa2", "vvv2", "ccc2", "aaa3", "vvv3", "ccc3", "aaa", "vvv", "ccc", "aaa1", "vvv1", "ccc1", "aaa2", "vvv2", "ccc2", "aaa3", "vvv3", "ccc3", "aaa", "vvv", "ccc", "aaa1", "vvv1", "ccc1", "aaa2", "vvv2", "ccc2", "aaa3", "vvv3", "ccc3", };
         public MainWindow()
         {
             InitializeComponent();
@@ -35,7 +35,7 @@ namespace SkJukeBox_Demo
         {
             if (index != 0)
             {
-                index = index - 3;
+                index = index - count;
                 tempStrings = new ObservableCollection<string>(strings.Skip(index).Take(count));
                 this.MusicListBox.ItemsSource = tempStrings;
             }
@@ -45,7 +45,7 @@ namespace SkJukeBox_Demo
         {
             if (index < this.strings.Count)
             {
-                index = index + 3;
+                index = index + count;
                 tempStrings = new ObservableCollection<string>(strings.Skip(index).Take(count));
                 this.MusicListBox.ItemsSource = tempStrings;
             }
