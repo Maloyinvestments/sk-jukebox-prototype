@@ -30,19 +30,19 @@
             </MenuItem>
         </ContextMenu>
     </Window.ContextMenu>
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
-        </Grid.ColumnDefinitions>
+    <Grid>        
         <Grid.RowDefinitions>
             <RowDefinition Height="0.6*"/>
             <RowDefinition Height="0.3*"/>
             <RowDefinition Height="0.05*"/>
         </Grid.RowDefinitions>
-        <!--<Button Content="^" Name="Pre" Click="Pre_Click" />-->
-        <ed:RegularPolygon Name="Pre" MouseDown="Pre_MouseDown"  Fill="#FF404047" HorizontalAlignment="Center" VerticalAlignment="Center" Height="30" Width="60" InnerRadius="1" PointCount="3" Stretch="Fill" Stroke="Black"  RenderTransformOrigin="0.5,0.5">
+        <Grid Background="#FFE6E6E6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <ed:RegularPolygon Name="Pre" MouseDown="Pre_MouseDown"  Fill="#FF404047" HorizontalAlignment="Center" VerticalAlignment="Center" Height="30" Width="60" InnerRadius="1" PointCount="3" Stretch="Fill" Stroke="Black"  RenderTransformOrigin="0.5,0.5">
 			<ed:RegularPolygon.RenderTransform>
 				<TransformGroup>
 					<ScaleTransform/>
@@ -52,7 +52,7 @@
 				</TransformGroup>
 			</ed:RegularPolygon.RenderTransform>
 		</ed:RegularPolygon>
-        <ListBox Grid.Column="1" Name="MusicListBox" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListBox Grid.Column="1" BorderThickness="0" Name="MusicListBox" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Background="#FFE6E6E6" Margin="1,0,-1,0">
                 <ListBox.ItemsPanel>
                     <ItemsPanelTemplate>
                         <UniformGrid Rows="2"/>
@@ -66,7 +66,6 @@
                 </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-           <!-- <Button Content=">" Grid.Column="2" Name="Next" Click="Next_Click" />-->
         <ed:RegularPolygon Name="Next" MouseDown="Next_MouseDown" Grid.Column="2" Fill="#FF404047" Height="30" Width="60" InnerRadius="1" PointCount="3" Stretch="Fill"  Stroke="Black" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
 			<ed:RegularPolygon.RenderTransform>
 				<TransformGroup>
@@ -77,7 +76,8 @@
 				</TransformGroup>
 			</ed:RegularPolygon.RenderTransform>
 		</ed:RegularPolygon>
-	    <Grid Grid.ColumnSpan="3" Grid.Row="1" ShowGridLines="True" Background="#FF0099FF">
+        </Grid>
+        <Grid Grid.ColumnSpan="3" Grid.Row="1" ShowGridLines="True" Background="#FF0099FF">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="0.3*"/>
                 <ColumnDefinition Width="0.4*"/>
@@ -113,15 +113,15 @@
                 <TextBlock Style="{DynamicResource ResourceKey=TitleTextBlock}" Text="Next" Margin="20,0,0,0" />
             </Grid>
         </Grid>
-        <StackPanel Background="DarkGray" Grid.Row="2" Grid.ColumnSpan="3" VerticalAlignment="Center" >
-            <StackPanel VerticalAlignment="Stretch">
+        <Grid Background="DarkGray" Grid.Row="2" Grid.ColumnSpan="3">
+            <StackPanel VerticalAlignment="Center">
                 <TextBlock HorizontalAlignment="Center" Foreground="White"  FontWeight="Bold" FontSize="20" VerticalAlignment="Center" >
                 <Run > www.</Run>
                 <Run Foreground="Orange">playmusic</Run>
                 <Run>.mx</Run>
             </TextBlock>
             </StackPanel>
-        </StackPanel>
+        </Grid>
 
     </Grid>
 </Window>
