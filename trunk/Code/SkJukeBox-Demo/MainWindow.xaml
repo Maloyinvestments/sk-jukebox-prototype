@@ -5,11 +5,15 @@
         Title="MainWindow" WindowStyle="None" WindowState="Maximized" KeyDown="Window_KeyDown">
     <Window.CommandBindings>
         <CommandBinding Command="Close"
-       CanExecute="CloseCanExecute"
+       CanExecute="CanExecute"
        Executed="CloseExecuted" />
+        <CommandBinding Command="Open"
+       CanExecute="CanExecute"
+       Executed="OpenAlbumExecuted" />
     </Window.CommandBindings>
     <Window.InputBindings>
         <KeyBinding Key="Q" Command="Close"/>
+        <KeyBinding Key="O" Command="Open"/>
     </Window.InputBindings>
     <Window.ContextMenu>
         <ContextMenu>
@@ -18,19 +22,14 @@
                     <Image Source="Images/cut.png" />
                 </MenuItem.Icon>-->
             </MenuItem>
-            <MenuItem Command="Copy">
+            <MenuItem Name="OpenAlbumDirectory" Click="OpenAlbumDirectory_Click" Header="Open Album Directory (O)">
                 <!--<MenuItem.Icon>
                     <Image Source="Images/copy.png" />
                 </MenuItem.Icon>-->
-            </MenuItem>
-            <MenuItem Command="Paste">
-                <!--<MenuItem.Icon>
-                    <Image Source="Images/paste.png" />
-                </MenuItem.Icon>-->
-            </MenuItem>
+            </MenuItem>           
         </ContextMenu>
     </Window.ContextMenu>
-    <Grid>        
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="0.6*"/>
             <RowDefinition Height="0.3*"/>
@@ -42,16 +41,17 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <ed:RegularPolygon Name="Pre" MouseDown="Pre_MouseDown"  Fill="#FF404047" HorizontalAlignment="Center" VerticalAlignment="Center" Height="30" Width="60" InnerRadius="1" PointCount="3" Stretch="Fill" Stroke="Black"  RenderTransformOrigin="0.5,0.5">
-			<ed:RegularPolygon.RenderTransform>
-				<TransformGroup>
-					<ScaleTransform/>
-					<SkewTransform/>
-					<RotateTransform Angle="-90"/>
-					<TranslateTransform/>
-				</TransformGroup>
-			</ed:RegularPolygon.RenderTransform>
-		</ed:RegularPolygon>
+            <ed:RegularPolygon Name="Pre" MouseDown="Pre_MouseDown"  Fill="#FF404047" HorizontalAlignment="Center" VerticalAlignment="Center" Height="25" Width="60" InnerRadius="1" PointCount="3" Stretch="Fill"  RenderTransformOrigin="0.5,0.5">
+                <ed:RegularPolygon.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform/>
+                        <SkewTransform/>
+                        <RotateTransform Angle="-90"/>
+                        <TranslateTransform/>
+                    </TransformGroup>
+                </ed:RegularPolygon.RenderTransform>                
+            </ed:RegularPolygon>
+
             <ListBox Grid.Column="1" BorderThickness="0" Name="MusicListBox" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Background="#FFE6E6E6" Margin="1,0,-1,0">
                 <ListBox.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -60,27 +60,36 @@
                 </ListBox.ItemsPanel>
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                    <Border BorderThickness="5" Width="200" Height="200">
-                        <TextBlock Text="{Binding .}"/>
-                    </Border>
-                </DataTemplate>
+                        <StackPanel VerticalAlignment="Center">
+                            <Image  Height="125" Width="125"    
+          Margin="4" 
+          VerticalAlignment="Center" 
+          Source="{Binding DefaultAlbumArt}" />
+                            <TextBlock FontWeight="Bold" Text="{Binding AlbumNo}" VerticalAlignment="Center" FontSize="15" Foreground="DarkGray" TextAlignment="Center"/>
+                            <TextBlock FontWeight="Bold" Text="{Binding AlbumName}" VerticalAlignment="Center" FontSize="15" Foreground="Gray" TextAlignment="Center"/>
+                            <TextBlock Text="{Binding ArtistName}" VerticalAlignment="Center" FontSize="15" Foreground="Gray" TextAlignment="Center"/>
+                        </StackPanel>
+                    </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-        <ed:RegularPolygon Name="Next" MouseDown="Next_MouseDown" Grid.Column="2" Fill="#FF404047" Height="30" Width="60" InnerRadius="1" PointCount="3" Stretch="Fill"  Stroke="Black" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
-			<ed:RegularPolygon.RenderTransform>
-				<TransformGroup>
-					<ScaleTransform/>
-					<SkewTransform/>
-					<RotateTransform Angle="90"/>
-					<TranslateTransform/>
-				</TransformGroup>
-			</ed:RegularPolygon.RenderTransform>
-		</ed:RegularPolygon>
+            <ed:RegularPolygon Name="Next" MouseDown="Next_MouseDown" Grid.Column="2" Fill="#FF404047" Height="25" Width="60" InnerRadius="1" PointCount="3" Stretch="Fill"  Stroke="Black" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
+                <ed:RegularPolygon.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform/>
+                        <SkewTransform/>
+                        <RotateTransform Angle="90"/>
+                        <TranslateTransform/>
+                    </TransformGroup>
+                </ed:RegularPolygon.RenderTransform>
+            </ed:RegularPolygon>
         </Grid>
-        <Grid Grid.ColumnSpan="3" Grid.Row="1" ShowGridLines="True" Background="#FF0099FF">
+
+        <Grid Grid.ColumnSpan="3" Grid.Row="1" Background="#FF0099FF">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="0.3*"/>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="0.4*"/>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="0.3*"/>
             </Grid.ColumnDefinitions>
             <Grid>
@@ -94,7 +103,8 @@
                 </Grid.RowDefinitions>
                 <TextBlock Style="{DynamicResource ResourceKey=TitleTextBlock}" Text="Suggestion" Grid.ColumnSpan="2" Margin="20,0,0,0" />
             </Grid>
-            <Grid Grid.Column="1">
+            <Grid Width="1" Grid.Column="1" Background="Black" Opacity="0.5"/>
+            <Grid Grid.Column="2" DataContext="{Binding ElementName=MusicListBox,Path=SelectedItem}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
@@ -104,8 +114,16 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
                 <TextBlock Style="{DynamicResource ResourceKey=TitleTextBlock}" Text="Play" Grid.ColumnSpan="2" Margin="20,0,0,0"/>
+                <Image Grid.Row="1" Margin="4" 
+          VerticalAlignment="Center" 
+          Source="{Binding DefaultAlbumArt}" />
+                <StackPanel Grid.Column="1" Grid.Row="1" VerticalAlignment="Center">
+                    <TextBlock FontWeight="Bold" Text="{Binding AlbumName}" VerticalAlignment="Center" FontSize="25" Foreground="White" TextAlignment="Center"/>
+                    <TextBlock Text="{Binding ArtistName}" VerticalAlignment="Center" FontSize="25" Foreground="White" TextAlignment="Center"/>
+                </StackPanel>
             </Grid>
-            <Grid Grid.Column="2">
+            <Grid Width="1" Grid.Column="3" Background="Black" Opacity="0.5"/>
+            <Grid Grid.Column="4">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
@@ -119,7 +137,7 @@
                 <Run > www.</Run>
                 <Run Foreground="Orange">playmusic</Run>
                 <Run>.mx</Run>
-            </TextBlock>
+                </TextBlock>
             </StackPanel>
         </Grid>
 
