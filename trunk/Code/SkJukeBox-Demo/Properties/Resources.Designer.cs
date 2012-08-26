@@ -59,5 +59,12 @@ namespace SkJukeBox_Demo.Properties {
                 resourceCulture = value;
             }
         }
+        
+        internal static System.Drawing.Bitmap PlayingAlbumAnimation {
+            get {
+                object obj = ResourceManager.GetObject("PlayingAlbumAnimation", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
     }
 }

@@ -1,8 +1,17 @@
 ﻿<Window x:Class="SkJukeBox_Demo.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-		xmlns:ed="http://schemas.microsoft.com/expression/2010/drawing"
-        Title="MainWindow" WindowStyle="None" WindowState="Maximized" KeyDown="Window_KeyDown">
+        xmlns:c="clr-namespace:SkJukeBox_Demo.Utility"
+		xmlns:ed="http://schemas.microsoft.com/expression/2010/drawing" 
+        xmlns:wfi="clr-namespace:System.Windows.Forms.Integration;assembly=WindowsFormsIntegration"
+    xmlns:winForms="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms"
+        xmlns:Controls="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Input.Toolkit" 
+        xmlns:WPFSoundVisualizationLib="clr-namespace:WPFSoundVisualizationLib;assembly=WPFSoundVisualizationLib" 
+        Title="MainWindow" WindowStyle="None" WindowState="Maximized" KeyDown="Window_KeyDown" Icon="/SkJukeBox-Demo;component/Assets/favicon.ico">
+    <Window.Resources>
+        <c:TimeSpanToStringConverter x:Key="Converter" />
+        <c:TrackToTrackNoConverter x:Key="TrackToTrackNoConverter"/>
+    </Window.Resources>
     <Window.CommandBindings>
         <CommandBinding Command="Close"
        CanExecute="CanExecute"
@@ -10,89 +19,211 @@
         <CommandBinding Command="Open"
        CanExecute="CanExecute"
        Executed="OpenAlbumExecuted" />
+        <CommandBinding Command="BrowseBack"
+       CanExecute="CanExecute"
+       Executed="BackspaceExecuted" />
+        <CommandBinding Command="Select"
+       CanExecute="CanExecute"
+       Executed="SelectExecuted" />
+        <CommandBinding Command="BrowseForward"
+       CanExecute="CanExecute"
+       Executed="NextExecuted" />
+        <CommandBinding Command="IncreaseZoom"
+       CanExecute="CanExecute"
+       Executed="IncreaseVolumeExecuted" />
+        <CommandBinding Command="DecreaseZoom"
+       CanExecute="CanExecute"
+       Executed="DecreaseVolumeExecuted" />
+        <CommandBinding Command="NextPage"
+       CanExecute="CanExecute"
+       Executed="NextAlbumExecuted" />
+        <CommandBinding Command="PreviousPage"
+       CanExecute="CanExecute"
+       Executed="PreviousAlbumExecuted" />
     </Window.CommandBindings>
     <Window.InputBindings>
         <KeyBinding Key="Q" Command="Close"/>
         <KeyBinding Key="O" Command="Open"/>
+        <KeyBinding Key="Back" Command="BrowseBack"/>
+        <KeyBinding Key="Enter" Command="Select"/>
+        <KeyBinding Key="Right" Command="BrowseForward"/>
+        <KeyBinding Key="PageUp" Command="IncreaseZoom"/>
+        <KeyBinding Key="PageDown" Command="DecreaseZoom"/>
+        <KeyBinding Key="Left" Command="PreviousPage"/>
+        <KeyBinding Key="Right" Command="NextPage"/>
     </Window.InputBindings>
     <Window.ContextMenu>
-        <ContextMenu>
-            <MenuItem Name="CloseContextMenu" Click="CloseContextMenu_Click" Header="Quit (Q)">
-                <!--<MenuItem.Icon>
-                    <Image Source="Images/cut.png" />
-                </MenuItem.Icon>-->
-            </MenuItem>
-            <MenuItem Name="OpenAlbumDirectory" Click="OpenAlbumDirectory_Click" Header="Open Album Directory (O)">
-                <!--<MenuItem.Icon>
-                    <Image Source="Images/copy.png" />
-                </MenuItem.Icon>-->
-            </MenuItem>           
+        <ContextMenu Name="MainContextMenu">
+            <MenuItem Name="NextContextMenu" Click="NextContextMenu_Click"  Header="Next (>)"/>
+            <MenuItem Name="OpenAlbumDirectory" Click="OpenAlbumDirectory_Click" Header="Open Album Directory (O)"/>
+            <MenuItem Name="CloseContextMenu" Click="CloseContextMenu_Click" Header="Quit (Q)"/>
         </ContextMenu>
     </Window.ContextMenu>
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="0.6*"/>
+            <RowDefinition Height="0.85*"/>
             <RowDefinition Height="0.3*"/>
-            <RowDefinition Height="0.05*"/>
+            <RowDefinition Height="0.1*"/>
         </Grid.RowDefinitions>
-        <Grid Background="#FFE6E6E6">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <ed:RegularPolygon Name="Pre" MouseDown="Pre_MouseDown"  Fill="#FF404047" HorizontalAlignment="Center" VerticalAlignment="Center" Height="25" Width="60" InnerRadius="1" PointCount="3" Stretch="Fill"  RenderTransformOrigin="0.5,0.5">
-                <ed:RegularPolygon.RenderTransform>
-                    <TransformGroup>
-                        <ScaleTransform/>
-                        <SkewTransform/>
-                        <RotateTransform Angle="-90"/>
-                        <TranslateTransform/>
-                    </TransformGroup>
-                </ed:RegularPolygon.RenderTransform>                
-            </ed:RegularPolygon>
+        <Grid>
+            <Grid Background="#FFE6E6E6" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="ListAlbumGrid">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <ed:RegularPolygon Name="Pre" MouseDown="Pre_MouseDown"  Fill="#FF404047" HorizontalAlignment="Center" VerticalAlignment="Center" Height="25" Width="60" InnerRadius="1" PointCount="3" Stretch="Fill"  RenderTransformOrigin="0.5,0.5">
+                    <ed:RegularPolygon.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform/>
+                            <SkewTransform/>
+                            <RotateTransform Angle="-90"/>
+                            <TranslateTransform/>
+                        </TransformGroup>
+                    </ed:RegularPolygon.RenderTransform>
+                </ed:RegularPolygon>
 
-            <ListBox Grid.Column="1" BorderThickness="0" Name="MusicListBox" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Background="#FFE6E6E6" Margin="1,0,-1,0">
-                <ListBox.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <UniformGrid Rows="2"/>
-                    </ItemsPanelTemplate>
-                </ListBox.ItemsPanel>
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel VerticalAlignment="Center">
-                            <Image  Height="125" Width="125"    
+                <ListBox PreviewKeyDown="ListBox_PreviewKeyDown"  Grid.Column="1" BorderThickness="0" Name="MusicListBox" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Background="#FFE6E6E6" Margin="1,0,-1,0">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Rows="2"/>
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel VerticalAlignment="Center" >
+                                <!--Opacity="{Binding Converter={StaticResource BooleanToOpacityConverter}, Path=IsPlaying}"-->
+                                <StackPanel.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="Pop" Click="GenreChangeClick"/>
+                                        <MenuItem Header="Rock" Click="GenreChangeClick"/>
+                                        <MenuItem Header="RnB" Click="GenreChangeClick"/>
+                                        <MenuItem Header="HipHop" Click="GenreChangeClick"/>
+                                    </ContextMenu>
+                                </StackPanel.ContextMenu>
+                                <Image  Height="120" Width="120"    
           Margin="4" 
           VerticalAlignment="Center" 
           Source="{Binding DefaultAlbumArt}" />
-                            <TextBlock FontWeight="Bold" Text="{Binding AlbumNo}" VerticalAlignment="Center" FontSize="15" Foreground="DarkGray" TextAlignment="Center"/>
-                            <TextBlock FontWeight="Bold" Text="{Binding AlbumName}" VerticalAlignment="Center" FontSize="15" Foreground="Gray" TextAlignment="Center"/>
-                            <TextBlock Text="{Binding ArtistName}" VerticalAlignment="Center" FontSize="15" Foreground="Gray" TextAlignment="Center"/>
+                                <TextBlock FontWeight="Bold" Text="{Binding AlbumNo}" VerticalAlignment="Center" FontSize="15" Foreground="DarkGray" TextAlignment="Center"/>
+                                <TextBlock FontWeight="Bold" Text="{Binding AlbumName}" VerticalAlignment="Center" FontSize="15" Foreground="Gray" TextAlignment="Center"/>
+                                <TextBlock Text="{Binding ArtistName}" VerticalAlignment="Center" FontSize="15" Foreground="Gray" TextAlignment="Center"/>
+                                <TextBlock Text="{Binding Genre}" FontWeight="DemiBold" VerticalAlignment="Center" FontSize="12" Foreground="LightGray" TextAlignment="Center"/>
+                                <!--<wfi:WindowsFormsHost>
+                                <winForms:PictureBox x:Name="pictureBoxLoading" VisibleChanged="pictureBoxLoading_VisibleChanged">
+                                </winForms:PictureBox>
+                            </wfi:WindowsFormsHost>-->
+                                <!--<c:AnimatedGIFControl Height="30" Width="50" Visibility="{Binding Converter={StaticResource BooleanToVisibilityConverter}, Path=IsPlaying}"/>-->
+                                <!--<MediaElement x:Name="loadingGif" Width="50" Height="100" Source="pack://application:,,,/MyProject;component/PlayingAlbumAnimation.gif" HorizontalAlignment="Center"/>-->
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <ed:RegularPolygon Name="Next" MouseDown="Next_MouseDown" Grid.Column="2" Fill="#FF404047" Height="25" Width="60" InnerRadius="1" PointCount="3" Stretch="Fill"  Stroke="Black" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
+                    <ed:RegularPolygon.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform/>
+                            <SkewTransform/>
+                            <RotateTransform Angle="90"/>
+                            <TranslateTransform/>
+                        </TransformGroup>
+                    </ed:RegularPolygon.RenderTransform>
+                </ed:RegularPolygon>
+            </Grid>
+            <Grid Background="#FFE6E6E6" Name="DetailAlbumGrid" Visibility="Collapsed">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.7*"/>
+                    <ColumnDefinition Width="0.3*"/>
+                </Grid.ColumnDefinitions>
+                <Grid  DataContext="{Binding ElementName=MusicListBox,Path=SelectedItem}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.6*"/>
+                        <ColumnDefinition Width="0.4*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <Image Margin="15" 
+          VerticalAlignment="Center" Height="375" Width="375"
+          Source="{Binding DefaultAlbumArt}" />
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,20,0,0">
+                            <TextBlock FontWeight="SemiBold" Text="{Binding AlbumNo}" VerticalAlignment="Center" FontSize="40" Foreground="Black" TextAlignment="Center"/>
+                            <StackPanel Margin="10,0,0,0">
+                                <TextBlock FontWeight="Medium"  Text="{Binding ArtistName}" VerticalAlignment="Center" FontSize="25" Foreground="Black" TextAlignment="Center"/>
+                                <TextBlock FontWeight="Medium" Text="{Binding AlbumName}" VerticalAlignment="Center" FontSize="25" Foreground="Black" TextAlignment="Center"/>
+                            </StackPanel>
                         </StackPanel>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-            <ed:RegularPolygon Name="Next" MouseDown="Next_MouseDown" Grid.Column="2" Fill="#FF404047" Height="25" Width="60" InnerRadius="1" PointCount="3" Stretch="Fill"  Stroke="Black" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
-                <ed:RegularPolygon.RenderTransform>
-                    <TransformGroup>
-                        <ScaleTransform/>
-                        <SkewTransform/>
-                        <RotateTransform Angle="90"/>
-                        <TranslateTransform/>
-                    </TransformGroup>
-                </ed:RegularPolygon.RenderTransform>
-            </ed:RegularPolygon>
-        </Grid>
-
-        <Grid Grid.ColumnSpan="3" Grid.Row="1" Background="#FF0099FF">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="0.3*"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="0.4*"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="0.3*"/>
-            </Grid.ColumnDefinitions>
-            <Grid>
+                    </StackPanel>
+                    <ListBox PreviewKeyDown="ListBox_PreviewKeyDown" Name="SongListBox" Grid.Column="1" Background="#FFE6E6E6" BorderThickness="0" ItemsSource="{Binding SongCollection}">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="{x:Type ListBoxItem}">
+                                <EventSetter Event="MouseDoubleClick" Handler="SongListBox_MouseDoubleClick" />
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="50"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock FontWeight="SemiBold" Text="{Binding Track, Converter={StaticResource TrackToTrackNoConverter}}" VerticalAlignment="Center" FontSize="20" Foreground="Black" TextAlignment="Right"/>
+                                    <TextBlock Margin="10,0,0,0" Grid.Column="1" FontWeight="SemiBold" Text="{Binding Title}" VerticalAlignment="Center" FontSize="20" Foreground="Black"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+                <StackPanel Grid.Column="1" Background="#FF0099FF" Margin="20,0,0,0">
+                    <StackPanel>
+                        <TextBlock Name="TopTextBlock" Margin="20,0,0,0">
+                            <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+        <Setter Property="FontSize" Value="20"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect
+      ShadowDepth="5"
+      Direction="345"
+      Color="DarkGray"
+      Opacity="0.4"
+     BlurRadius="8"/>
+            </Setter.Value>
+        </Setter>
+    </Style>
+                                </TextBlock.Style>
+                        </TextBlock>
+                        <ListBox  Background="#FF0099FF" BorderThickness="0" Name="TopListBox" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="1"/>
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="20,0,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Image  Margin="4" VerticalAlignment="Center" Source="{Binding DefaultAlbumArt}" Height="100" Width="100"/>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock FontWeight="Bold" Text="{Binding AlbumNo}" VerticalAlignment="Center"  FontSize="25" Foreground="Black" TextAlignment="Center"/>
+                                            <TextBlock FontWeight="SemiBold" Text="{Binding ArtistName}" VerticalAlignment="Center" FontSize="15" Foreground="Black" TextAlignment="Center"/>
+                                            <TextBlock FontWeight="SemiBold" Text="{Binding AlbumName}" VerticalAlignment="Center" FontSize="15" Foreground="Black" TextAlignment="Center"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+            <!--<Grid DataContext="{Binding ElementName=MusicListBox,Path=SelectedItem}" Name="PlayGrid1">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
@@ -101,13 +232,83 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
+                <Image Grid.Row="1" Margin="4" 
+          VerticalAlignment="Center" 
+          Source="{Binding DefaultAlbumArt}" />
+                <StackPanel Grid.Column="1" Grid.Row="1" VerticalAlignment="Center">
+                    <TextBlock Grid.Column="1" Grid.Row="1"  FontWeight="Bold" Text="{Binding AlbumName}" VerticalAlignment="Center" FontSize="25"  TextAlignment="Center"/>
+                    <TextBlock Text="{Binding ArtistName}" VerticalAlignment="Center" FontSize="25" TextAlignment="Center"/>
+                </StackPanel>
+            </Grid>-->
+        </Grid>
+        <Grid Grid.ColumnSpan="3" Grid.Row="1" Background="#FF0099FF">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="0.3*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="0.4*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="0.2*"/>
+            </Grid.ColumnDefinitions>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
                 <TextBlock Style="{DynamicResource ResourceKey=TitleTextBlock}" Text="Suggestion" Grid.ColumnSpan="2" Margin="20,0,0,0" />
+                <TextBlock Grid.Row="1" Name="GenreTextBlock" Grid.ColumnSpan="2" Style="{DynamicResource ResourceKey=GenreTextBlock}" HorizontalAlignment="Center"/>
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Image Margin="4" VerticalAlignment="Center" Source="{Binding ElementName=TopAlbumListBox,Path=SelectedItem.DefaultAlbumArt}" />
+                        <Controls:Rating Grid.Row="1"  Foreground="Yellow" Background="#FF0099FF" HorizontalAlignment="Center" HorizontalContentAlignment="Center" Value="{Binding ElementName=TopAlbumListBox,Path=SelectedItem.Rating}" IsReadOnly="True">
+                            <Controls:RatingItem/>
+                            <Controls:RatingItem/>
+                            <Controls:RatingItem/>
+                            <Controls:RatingItem/>
+                            <Controls:RatingItem/>
+                        </Controls:Rating>
+                    </Grid>
+                    <ListBox Name="TopAlbumListBox" Grid.Column="1" BorderThickness="0"  Background="#FF0099FF" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <!--<Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="50"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                <TextBlock  FontWeight="Bold" Text="{Binding Rank}" VerticalAlignment="Center" FontSize="12" Foreground="LightGray" TextAlignment="Right"/>-->
+
+                                <StackPanel Margin="5">
+                                    <TextBlock Grid.Column="1" FontWeight="Bold" Text="{Binding AlbumNo}" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="25" Foreground="White"/>
+                                    <TextBlock  Grid.Column="1" FontWeight="Bold" Text="{Binding ArtistName}" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" Foreground="White"/>
+                                    <TextBlock  Grid.Column="1" FontWeight="Bold" Text="{Binding AlbumName}" VerticalAlignment="Center" HorizontalAlignment="Center"  FontSize="20" Foreground="White"/>
+                                </StackPanel>
+                                <!--</Grid>-->
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                </Grid>
             </Grid>
             <Grid Width="1" Grid.Column="1" Background="Black" Opacity="0.5"/>
-            <Grid Grid.Column="2" DataContext="{Binding ElementName=MusicListBox,Path=SelectedItem}">
+            <Grid Grid.Column="2"  Name="PlayGrid">
+                <!--DataContext="{Binding ElementName=MusicListBox,Path=SelectedItem}"-->
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="0.3*"/>
+                    <ColumnDefinition Width="0.6*"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -117,10 +318,103 @@
                 <Image Grid.Row="1" Margin="4" 
           VerticalAlignment="Center" 
           Source="{Binding DefaultAlbumArt}" />
-                <StackPanel Grid.Column="1" Grid.Row="1" VerticalAlignment="Center">
-                    <TextBlock FontWeight="Bold" Text="{Binding AlbumName}" VerticalAlignment="Center" FontSize="25" Foreground="White" TextAlignment="Center"/>
-                    <TextBlock Text="{Binding ArtistName}" VerticalAlignment="Center" FontSize="25" Foreground="White" TextAlignment="Center"/>
-                </StackPanel>
+                <Grid Grid.Column="1" Grid.Row="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock FontWeight="Bold" Name="PlayingSongTextBlock" VerticalAlignment="Center" FontSize="30" Foreground="White" TextAlignment="Center"  HorizontalAlignment="Center"/>
+                    <Controls:Rating Name="RatingAlbum" Foreground="Yellow" Background="#FF0099FF" HorizontalAlignment="Center" HorizontalContentAlignment="Center" Grid.Row="1">
+                        <Controls:RatingItem/>
+                        <Controls:RatingItem/>
+                        <Controls:RatingItem/>
+                        <Controls:RatingItem/>
+                        <Controls:RatingItem/>
+                    </Controls:Rating>
+                    <!--<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">-->
+                    <Viewbox HorizontalAlignment="Center" Stretch="Uniform" Grid.Row="2" VerticalAlignment="Center">
+                        <TextBlock>
+                        <TextBlock Text="{Binding ArtistName}" VerticalAlignment="Center" FontSize="25" Foreground="White" TextAlignment="Center"  HorizontalAlignment="Center"/>
+                        <TextBlock Text=" - " VerticalAlignment="Center" FontSize="25" Foreground="White" TextAlignment="Center"  HorizontalAlignment="Center"/>
+                        <TextBlock FontWeight="Bold" Text="{Binding AlbumName}" VerticalAlignment="Center" FontSize="25" Foreground="White" TextAlignment="Center"  HorizontalAlignment="Center"/>
+                        </TextBlock>
+                    </Viewbox>
+                    <!--</StackPanel>-->
+                    <StackPanel Grid.Row="3"
+         HorizontalAlignment="Center"
+          VerticalAlignment="Center" 
+          Orientation="Horizontal">
+                        <c:UpdatingMediaElement
+        x:Name="MyMediaElement"
+        LoadedBehavior="Manual" 
+        Source="{Binding ElementName=SongListBox, Path=SelectedItem.FileName}" MediaEnded="MyMediaElement_MediaEnded"/>
+                        <!-- Volume -->
+                        <!--<Slider
+            Style="{StaticResource VolumeSlider}" 
+            Minimum="0" 
+            Maximum="1" 
+                    Value="{Binding ElementName=MyMediaElement, Path=Volume, Mode=TwoWay}" 
+            LargeChange="0.1"             
+            Width="46" Height="10" 
+            VerticalAlignment="Center"/>-->
+
+                        <!-- Play -->
+                        <!--<ToggleButton Click="Play" Name="PlayButton"
+            Style="{StaticResource PlayButton}" 
+            Width="30" Height="30" 
+            Margin="4,0,4,0" 
+            VerticalAlignment="Center"  IsEnabled="False"        >
+                            <Path x:Name="Path" Width="14" Height="14" Margin="4,0,0,0" Stretch="Fill" Fill="#80000000" Data="F1 M 149.333,406L 149.333,598L 317.333,502L 149.333,406 Z "/>
+                        </ToggleButton>-->
+                        <!-- Playback Time -->
+                        <StackPanel>
+                            <TextBlock
+            Width="40" Height="22" 
+            Text="{Binding ElementName=MyMediaElement, Path=Position, Converter={StaticResource Converter}}" 
+            FontFamily="Assets\#Telidon" 
+            FontSize="16" 
+            VerticalAlignment="Center"/>
+                            <TextBlock
+            Width="40" Height="22" 
+            Text="{Binding ElementName=MyMediaElement, Path=NaturalDuration, Converter={StaticResource Converter}}" 
+            FontFamily="Assets\#Telidon" 
+            FontSize="16" 
+            VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <Slider Name="timelineSlider" Style="{StaticResource VolumeSlider}" Margin="5"  Height="30" Width="200" HorizontalAlignment="Stretch" 
+                         Value="{Binding ElementName=MyMediaElement, Path=Position.TotalSeconds,Mode=OneWay}" 
+                        Maximum="{Binding ElementName=MyMediaElement, Path=NaturalDuration.TimeSpan.TotalSeconds}"                 
+                        Minimum="0" IsSelectionRangeEnabled="False"/>
+
+
+                        <!--<BandedSpectrumAnalyzer:ReflectionControl Grid.Row="1"
+                              Grid.Column="1"
+                              HorizontalAlignment="Stretch"
+                              VerticalAlignment="Stretch"
+                              Margin="5">
+                    <BandedSpectrumAnalyzer:SpectrumAnalyzer x:Name="spectrumAnalyzer"
+                                 Height="160"
+                                 HorizontalAlignment="Stretch"
+                                 VerticalAlignment="Bottom"
+                                 AveragePeaks="False"
+                                 MinimumFrequency="20"
+                                 MaximumFrequency="20000"
+                                 PeakFallDelay="10"
+                                 BarHeightScaling="Decibel" />
+                </BandedSpectrumAnalyzer:ReflectionControl>-->
+                        <!--<WPFSoundVisualizationLib:SpectrumAnalyzer x:Name="spectrumAnalyzer"
+                                 Height="160"
+                                 HorizontalAlignment="Stretch"
+                                 VerticalAlignment="Bottom"
+                                 AveragePeaks="False"
+                                 MinimumFrequency="20"
+                                 MaximumFrequency="20000"
+                                 PeakFallDelay="10"
+                                 BarHeightScaling="Decibel" />-->
+                    </StackPanel>
+                </Grid>
             </Grid>
             <Grid Width="1" Grid.Column="3" Background="Black" Opacity="0.5"/>
             <Grid Grid.Column="4">
@@ -128,18 +422,83 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                <TextBlock Style="{DynamicResource ResourceKey=TitleTextBlock}" Text="Next" Margin="20,0,0,0" />
+                <TextBlock Style="{DynamicResource ResourceKey=TitleTextBlock}" Text="Track List" Margin="20,0,0,0" />
+                <ListBox Grid.Row="1" Name="TrackListBox" Background="#FF0099FF" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                    <!--<ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid/>
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>-->
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left" Margin="5">
+                                <TextBlock FontWeight="Bold" Text="{Binding TrackNo}" VerticalAlignment="Center" HorizontalAlignment="Left"  FontSize="12" Foreground="White" TextAlignment="Left"/>
+                                <TextBlock FontWeight="SemiBold" Text="{Binding SongName}" VerticalAlignment="Center" HorizontalAlignment="Left"  FontSize="15" Foreground="White"/>
+
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock FontWeight="Normal" Text="{Binding Artist}" VerticalAlignment="Center" HorizontalAlignment="Left"  FontSize="12" Foreground="White"/>
+                                    <TextBlock FontWeight="Normal" Text=" - " VerticalAlignment="Center" HorizontalAlignment="Left"  FontSize="10" Foreground="White"/>
+                                    <TextBlock FontWeight="Normal" Text="{Binding Album}" VerticalAlignment="Center" HorizontalAlignment="Left"  FontSize="12" Foreground="White"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <!--<ListBox PreviewKeyDown="ListBox_PreviewKeyDown" Name="SongListBox" SelectionChanged="SongListBox_SelectionChanged" Grid.Row="2" BorderThickness="0" DataContext="{Binding ElementName=MusicListBox,Path=SelectedItem}" Background="#FF0099FF" Margin="10,0,10,0" ItemsSource="{Binding SongCollection}">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="{x:Type ListBoxItem}">
+                            <EventSetter Event="MouseDoubleClick" Handler="SongListBox_MouseDoubleClick" />
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="50"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock  FontWeight="Bold" Text="{Binding Track}" VerticalAlignment="Center" FontSize="15" Foreground="DarkGray" TextAlignment="Right"/>
+                                <TextBlock Margin="10,0,0,0" Grid.Column="1" FontWeight="Bold" Text="{Binding Title}" VerticalAlignment="Center" FontSize="15" Foreground="White"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>-->
             </Grid>
         </Grid>
         <Grid Background="DarkGray" Grid.Row="2" Grid.ColumnSpan="3">
-            <StackPanel VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="0.3*"/>
+                <ColumnDefinition Width="0.5*"/>
+                <ColumnDefinition Width="0.3*"/>
+            </Grid.ColumnDefinitions>
+            <!--<StackPanel VerticalAlignment="Center">
                 <TextBlock HorizontalAlignment="Center" Foreground="White"  FontWeight="Bold" FontSize="20" VerticalAlignment="Center" >
                 <Run > www.</Run>
                 <Run Foreground="Orange">playmusic</Run>
                 <Run>.mx</Run>
                 </TextBlock>
-            </StackPanel>
-        </Grid>
+            </StackPanel>-->
+            <TextBlock Grid.Column="0" VerticalAlignment="Center" Foreground="White" FontSize="20" HorizontalAlignment="Left" Margin="10,0,0,0" FontWeight="Normal" Name="VolumeTextBlock" TextAlignment="Center"/>
+            <TextBlock Grid.Column="1" VerticalAlignment="Center" Foreground="White" FontSize="20" FontWeight="Regular" Name="NotifyTextBlock" TextAlignment="Center" Visibility="{Binding ElementName=DetailAlbumGrid, Path=Visibility}">
+                Press "Backspace" key to Return to all album
+            </TextBlock>
 
+            <Border BorderBrush="Red" BorderThickness="3" Grid.Column="2">
+                <TextBlock Name="InputTextBox"  FontSize="35" FontWeight="SemiBold" Foreground="Red" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+        </Grid>  
+          <Popup Name="popup1" Placement="Center" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.RowSpan="3" Opacity="0.7" AllowsTransparency="True" >
+            <Border BorderBrush="Red" BorderThickness="3" CornerRadius="3" Background="White" Opacity="0.7">
+                <TextBlock Name="PopupTextBlock" FontSize="20" Margin="10" FontWeight="SemiBold" Opacity="0.7" Foreground="Red" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">
+                    <!--Add Track(s) to TrackList completed-->
+                </TextBlock>
+       </Border>
+        </Popup>
     </Grid>
+    
 </Window>
